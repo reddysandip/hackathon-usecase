@@ -21,12 +21,15 @@ jobs:
           - name: application-service
             context: application-service
             dockerfile: application-service/Dockerfile
+            extraTag: ""
           - name: patient-service
             context: patient-service
             dockerfile: patient-service/Dockerfile
+            extraTag: ""
           - name: order-service
             context: order-service
             dockerfile: order-service/Dockerfile
+            extraTag: "jdk21"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -79,6 +82,7 @@ jobs:
             ${{ steps.acr.outputs.login_server }}/${{ matrix.service.name }}:${{ steps.tags.outputs.sha_tag }}
             ${{ steps.acr.outputs.login_server }}/${{ matrix.service.name }}:${{ steps.tags.outputs.branch_tag }}
             ${{ steps.acr.outputs.login_server }}/${{ matrix.service.name }}:${{ steps.tags.outputs.version_tag }}
+            ${{ steps.acr.outputs.login_server }}/${{ matrix.service.name }}:${{ matrix.service.extraTag }}
           cache-from: type=registry,ref=${{ steps.acr.outputs.login_server }}/${{ matrix.service.name }}:buildcache
           cache-to: type=registry,ref=${{ steps.acr.outputs.login_server }}/${{ matrix.service.name }}:buildcache,mode=max
 

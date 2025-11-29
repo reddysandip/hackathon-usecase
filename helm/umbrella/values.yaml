@@ -1,6 +1,6 @@
 global:
   imagePullSecrets: []
-  registry: ""
+  registry: "<your-acr-name>.azurecr.io"
   namespace: "default"
   keyvault:
     enabled: false
@@ -32,7 +32,7 @@ application-service:
 order-service:
   image:
     repository: "order-service"
-    tag: "latest"
+    tag: "jdk21"
     pullPolicy: IfNotPresent
   service:
     port: 8080
