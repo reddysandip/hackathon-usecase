@@ -1,0 +1,9 @@
+image:
+  repository: application-service
+  tag: latest
+  pullPolicy: IfNotPresent
+service:
+  port: 3001
+replicaCount: 1
+resources: {}
+env: []

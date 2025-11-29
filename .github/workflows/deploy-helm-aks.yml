@@ -1,0 +1,53 @@
+name: Deploy Helm to AKS
+
+on:
+  workflow_run:
+    workflows: ["Build and Push Images to ACR"]
+    types: ["completed"]
+    branches: ["main"]
+  workflow_dispatch:
+
+env:
+  ACR_NAME: ${{ secrets.AZURE_ACR_NAME }}
+  AKS_RG: ${{ secrets.AZURE_AKS_RG }}
+  AKS_NAME: ${{ secrets.AZURE_AKS_NAME }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Get AKS credentials
+        run: |
+          az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          az aks get-credentials -g "$AKS_RG" -n "$AKS_NAME" --overwrite-existing
+
+      - name: Get ACR login server
+        id: acr
+        uses: azure/cli@v2
+        with:
+          inlineScript: |
+            LOGIN_SERVER=$(az acr show -n $ACR_NAME --query loginServer -o tsv)
+            echo "login_server=$LOGIN_SERVER" >> $GITHUB_OUTPUT
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.14.0
+
+      - name: Helm dependency update
+        run: |
+          helm dependency update helm/umbrella
+
+      - name: Deploy/Upgrade release
+        run: |
+          helm upgrade --install healthcare helm/umbrella -n default \
+            --create-namespace \
+            --set global.registry=${{ steps.acr.outputs.login_server }}

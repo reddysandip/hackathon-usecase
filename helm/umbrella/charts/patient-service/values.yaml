@@ -1,0 +1,9 @@
+image:
+  repository: patient-service
+  tag: latest
+  pullPolicy: IfNotPresent
+service:
+  port: 3000
+replicaCount: 1
+resources: {}
+env: []

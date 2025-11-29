@@ -1,0 +1,92 @@
+name: Build and Push Images to ACR
+
+on:
+  push:
+    branches: [ "main", "hackathon-working", "feature/**" ]
+    tags: [ 'v*.*.*' ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  ACR_NAME: ${{ secrets.AZURE_ACR_NAME }}
+  SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - name: application-service
+            context: application-service
+            dockerfile: application-service/Dockerfile
+          - name: patient-service
+            context: patient-service
+            dockerfile: patient-service/Dockerfile
+          - name: order-service
+            context: order-service
+            dockerfile: order-service/Dockerfile
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node for caching (Node apps)
+        if: contains(matrix.service.name, 'service')
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Azure CLI - Get ACR login server
+        id: acr
+        uses: azure/cli@v2
+        with:
+          inlineScript: |
+            LOGIN_SERVER=$(az acr show -n $ACR_NAME --query loginServer -o tsv)
+            echo "login_server=$LOGIN_SERVER" >> $GITHUB_OUTPUT
+
+      - name: Login to ACR
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ steps.acr.outputs.login_server }}
+          username: ${{ secrets.AZURE_ACR_USERNAME }}
+          password: ${{ secrets.AZURE_ACR_PASSWORD }}
+
+      - name: Compute Tags
+        id: tags
+        run: |
+          SHA_TAG=sha-${GITHUB_SHA::7}
+          echo "sha_tag=$SHA_TAG" >> $GITHUB_OUTPUT
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            VERSION_TAG=${GITHUB_REF#refs/tags/}
+            echo "version_tag=$VERSION_TAG" >> $GITHUB_OUTPUT
+          fi
+          BRANCH_TAG=$(echo "${GITHUB_REF#refs/heads/}" | tr '/' '-')
+          echo "branch_tag=$BRANCH_TAG" >> $GITHUB_OUTPUT
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.service.context }}
+          file: ${{ matrix.service.dockerfile }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            ${{ steps.acr.outputs.login_server }}/${{ matrix.service.name }}:${{ steps.tags.outputs.sha_tag }}
+            ${{ steps.acr.outputs.login_server }}/${{ matrix.service.name }}:${{ steps.tags.outputs.branch_tag }}
+            ${{ steps.acr.outputs.login_server }}/${{ matrix.service.name }}:${{ steps.tags.outputs.version_tag }}
+          cache-from: type=registry,ref=${{ steps.acr.outputs.login_server }}/${{ matrix.service.name }}:buildcache
+          cache-to: type=registry,ref=${{ steps.acr.outputs.login_server }}/${{ matrix.service.name }}:buildcache,mode=max
+
+      - name: Output image references
+        run: |
+          echo "Pushed tags (if push event):"
+          echo "- ${{ steps.acr.outputs.login_server }}/${{ matrix.service.name }}:${{ steps.tags.outputs.sha_tag }}"
+          echo "- ${{ steps.acr.outputs.login_server }}/${{ matrix.service.name }}:${{ steps.tags.outputs.branch_tag }}"
+          if [ -n "${{ steps.tags.outputs.version_tag }}" ]; then
+            echo "- ${{ steps.acr.outputs.login_server }}/${{ matrix.service.name }}:${{ steps.tags.outputs.version_tag }}"
+          fi

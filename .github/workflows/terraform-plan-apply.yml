@@ -1,0 +1,78 @@
+name: Terraform Plan and Apply
+
+on:
+  pull_request:
+    branches: ["main"]
+    paths:
+      - 'infra/azure/**'
+  push:
+    branches: ["main"]
+    paths:
+      - 'infra/azure/**'
+
+jobs:
+  plan:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Init backend (dev)
+        working-directory: infra/azure/envs/dev
+        run: |
+          terraform init \
+            -backend-config="resource_group_name=hc-dev-rg" \
+            -backend-config="storage_account_name=hcdevtfstate" \
+            -backend-config="container_name=tfstate" \
+            -backend-config="key=dev/terraform.tfstate"
+
+      - name: Plan (dev)
+        working-directory: infra/azure/envs/dev
+        run: |
+          terraform plan \
+            -var "subscription_id=${{ secrets.ARM_SUBSCRIPTION_ID }}" \
+            -var "tenant_id=${{ secrets.ARM_TENANT_ID }}"
+
+  apply:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Init backend (dev)
+        working-directory: infra/azure/envs/dev
+        run: |
+          terraform init \
+            -backend-config="resource_group_name=hc-dev-rg" \
+            -backend-config="storage_account_name=hcdevtfstate" \
+            -backend-config="container_name=tfstate" \
+            -backend-config="key=dev/terraform.tfstate"
+
+      - name: Apply (dev)
+        working-directory: infra/azure/envs/dev
+        run: |
+          terraform apply -auto-approve \
+            -var "subscription_id=${{ secrets.ARM_SUBSCRIPTION_ID }}" \
+            -var "tenant_id=${{ secrets.ARM_TENANT_ID }}"

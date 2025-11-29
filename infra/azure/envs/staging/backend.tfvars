@@ -1,0 +1,7 @@
+resource_group_name  = "hc-stg-rg"
+storage_account_name = "hcstgtfstate"
+container_name       = "tfstate"
+key                  = "staging/terraform.tfstate"
+subscription_id      = ""
+tenant_id            = ""
+location             = "eastus"

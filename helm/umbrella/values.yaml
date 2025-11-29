@@ -1,0 +1,40 @@
+global:
+  imagePullSecrets: []
+  registry: ""
+  namespace: "default"
+  keyvault:
+    enabled: false
+    name: ""
+    tenantId: ""
+    spClassName: "kv-secrets"
+    objects: [] # e.g., [{ objectName: "app-secret", objectType: "secret" }]
+
+patient-service:
+  image:
+    repository: "patient-service"
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  service:
+    port: 3000
+  resources: {}
+  env: []
+
+application-service:
+  image:
+    repository: "application-service"
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  service:
+    port: 3001
+  resources: {}
+  env: []
+
+order-service:
+  image:
+    repository: "order-service"
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  service:
+    port: 8080
+  resources: {}
+  env: []

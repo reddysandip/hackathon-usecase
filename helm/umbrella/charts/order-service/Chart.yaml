@@ -1,0 +1,5 @@
+apiVersion: v2
+name: order-service
+description: Order service chart (Java)
+version: 0.1.0
+type: application

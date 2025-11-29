@@ -1,0 +1,7 @@
+resource_group_name  = "hc-dev-rg"
+storage_account_name = "hcdevtfstate"
+container_name       = "tfstate"
+key                  = "dev/terraform.tfstate"
+subscription_id      = ""
+tenant_id            = ""
+location             = "eastus"

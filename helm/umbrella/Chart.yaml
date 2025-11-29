@@ -1,0 +1,17 @@
+apiVersion: v2
+name: healthcare-umbrella
+description: Umbrella chart for patient, application, and order services
+version: 0.1.0
+type: application
+
+# Declare subcharts
+dependencies:
+  - name: patient-service
+    version: 0.1.0
+    repository: file://charts/patient-service
+  - name: application-service
+    version: 0.1.0
+    repository: file://charts/application-service
+  - name: order-service
+    version: 0.1.0
+    repository: file://charts/order-service

@@ -1,0 +1,41 @@
+name: Terraform CI
+
+on:
+  pull_request:
+    branches: ["main"]
+    paths:
+      - 'infra/azure/**'
+
+jobs:
+  fmt-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Terraform fmt
+        working-directory: infra/azure
+        run: terraform fmt -recursive -check
+
+      - name: Terraform validate (dev)
+        working-directory: infra/azure/envs/dev
+        run: |
+          terraform init -backend=false
+          terraform validate
+
+      - name: Terraform validate (staging)
+        working-directory: infra/azure/envs/staging
+        run: |
+          terraform init -backend=false
+          terraform validate
+
+      - name: Terraform validate (prod)
+        working-directory: infra/azure/envs/prod
+        run: |
+          terraform init -backend=false
+          terraform validate
