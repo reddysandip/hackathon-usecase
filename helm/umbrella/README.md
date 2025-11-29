@@ -14,7 +14,7 @@ helm dependency update helm/umbrella
 helm install healthcare helm/umbrella -n default
 ```
 
-Override image repositories/tags (e.g., ACR):
+Override image repositories/tags (e.g., ACR, Java 21 tag for order-service):
 
 ```bash
 helm install healthcare helm/umbrella \
@@ -24,7 +24,7 @@ helm install healthcare helm/umbrella \
   --set order-service.image.repository=order-service \
   --set patient-service.image.tag=1.0.0 \
   --set application-service.image.tag=1.0.0 \
-  --set order-service.image.tag=1.0.0
+  --set order-service.image.tag=jdk21
 ```
 
 To uninstall:
@@ -38,7 +38,7 @@ Enable mounting secrets via Azure Key Vault CSI driver:
 
 ```bash
 helm upgrade --install healthcare helm/umbrella -n default \
-  --set global.registry=myacr.azurecr.io \
+  --set global.registry=myteamregistry.azurecr.io \
   --set global.keyvault.enabled=true \
   --set global.keyvault.name=<kv-name> \
   --set global.keyvault.tenantId=<tenant-id> \

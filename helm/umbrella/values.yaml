@@ -1,6 +1,6 @@
 global:
   imagePullSecrets: []
-  registry: "<your-acr-name>.azurecr.io"
+  registry: "myteamregistry.azurecr.io"
   namespace: "default"
   keyvault:
     enabled: false
