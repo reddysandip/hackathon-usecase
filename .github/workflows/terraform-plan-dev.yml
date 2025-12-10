@@ -4,7 +4,7 @@ on:
   push:
     branches: [dev]
     paths:
-      - 'infra/gcp/**'
+      - 'infra/gcp/envs/dev/**'
 
 permissions:
   id-token: write
@@ -38,6 +38,9 @@ jobs:
           service_account: github-terraform-dev@${{ env.PROJECT_ID }}.iam.gserviceaccount.com
           project_id: ${{ env.PROJECT_ID }}
 
+      - name: Terraform Format
+        run: terraform fmt -recursive
+
       - name: Terraform Init
         run: terraform init -backend-config=backend.hcl -input=false
 
@@ -51,4 +54,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tfplan-dev
-          path: infra/gcp/dev/tfplan
+          path: infra/gcp/envs/dev/tfplan
