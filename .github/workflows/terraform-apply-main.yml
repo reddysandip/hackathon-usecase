@@ -30,10 +30,11 @@ jobs:
 
     environment:
       name: ${{ matrix.environment }}
+      # You can enable required reviewers in GitHub repo settings for extra protection
 
     defaults:
       run:
-        working-directory: infra/gcp/${{ matrix.env }}
+        working-directory: infra/gcp/envs/${{ matrix.env }}
 
     steps:
       - name: Checkout

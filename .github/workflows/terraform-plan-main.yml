@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'infra/gcp/**'
+      - 'infra/gcp/envs/**'
 
 permissions:
   id-token: write
@@ -28,7 +28,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: infra/gcp/${{ matrix.env }}
+        working-directory: infra/gcp/envs/${{ matrix.env }}
 
     steps:
       - name: Checkout
@@ -46,6 +46,9 @@ jobs:
           service_account: ${{ matrix.service_account_prefix }}@${{ env.PROJECT_ID }}.iam.gserviceaccount.com
           project_id: ${{ env.PROJECT_ID }}
 
+      - name: Terraform Format
+        run: terraform fmt -recursive
+
       - name: Terraform Init
         run: terraform init -backend-config=backend.hcl -input=false
 
@@ -59,4 +62,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tfplan-${{ matrix.env }}
-          path: infra/gcp/${{ matrix.env }}/tfplan
+          path: infra/gcp/envs/${{ matrix.env }}/tfplan
