@@ -30,7 +30,7 @@ jobs:
       - name: Authenticate to GCP via WIF
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ secrets.WIF_PROVIDER_DEV }}
+          workload_identity_provider: projects/661961012629/locations/global/workloadIdentityPools/github-pool-v4/providers/github-provider
           service_account: github-terraform-dev@${{ env.PROJECT_ID }}.iam.gserviceaccount.com
           project_id: ${{ env.PROJECT_ID }}
 
