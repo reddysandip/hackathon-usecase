@@ -12,16 +12,18 @@ env:
   PROJECT_ID: massive-sandbox-477717-k3
 
 jobs:
-  terraform-plan:
+  terraform-plan-staging:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: infra/gcp/envs/staging
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - uses: hashicorp/setup-terraform@v3
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.6.0
 
@@ -31,8 +33,24 @@ jobs:
           workload_identity_provider: ${{ secrets.WIF_PROVIDER_STAGING }}
           service_account: github-terraform-staging@${{ env.PROJECT_ID }}.iam.gserviceaccount.com
           project_id: ${{ env.PROJECT_ID }}
+          create_credentials_file: true
+          export_environment_variables: true
+          token_format: "access_token"
 
-      - run: terraform fmt -recursive
-      - run: terraform init -backend-config=backend.hcl -input=false
-      - run: terraform validate -no-color
-      - run: terraform plan -out=tfplan -input=false -no-color
+      - name: Terraform Format
+        run: terraform fmt -recursive
+
+      - name: Terraform Init
+        run: terraform init -backend-config=backend.hcl -input=false
+
+      - name: Terraform Validate
+        run: terraform validate -no-color
+
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan -input=false -no-color
+
+      - name: Upload Plan Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan-staging
+          path: infra/gcp/envs/staging/tfplan
