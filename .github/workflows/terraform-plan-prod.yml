@@ -19,29 +19,20 @@ jobs:
         working-directory: infra/gcp/envs/prod
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.6.0
 
       - name: Authenticate to GCP via WIF
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ secrets.WIF_PROVIDER_PROD }}
+          workload_identity_provider: projects/661961012629/locations/global/workloadIdentityPools/github-pool-v4/providers/github-provider-prod
           service_account: github-terraform-prod@${{ env.PROJECT_ID }}.iam.gserviceaccount.com
           project_id: ${{ env.PROJECT_ID }}
 
-      - name: Terraform Format
-        run: terraform fmt -recursive
-
-      - name: Terraform Init
-        run: terraform init -backend-config=backend.hcl -input=false
-
-      - name: Terraform Validate
-        run: terraform validate -no-color
-
-      - name: Terraform Plan
-        run: terraform plan -out=tfplan -input=false -no-color
+      - run: terraform fmt -recursive
+      - run: terraform init -backend-config=backend.hcl -input=false
+      - run: terraform validate -no-color
+      - run: terraform plan -out=tfplan -input=false -no-color
