@@ -79,4 +79,3 @@ module "aks" {
   acr_id                     = "/subscriptions/${var.subscription_id}/resourceGroups/${module.rg.name}/providers/Microsoft.ContainerRegistry/registries/${module.acr.name}"
   tags                       = local.tags
 }
-#
