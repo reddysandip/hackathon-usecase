@@ -1,15 +1,15 @@
 output "cluster_name" {
-  value = google_container_cluster.primary.name
+  value = google_container_cluster.gke.name
 }
 
 output "endpoint" {
-  value = google_container_cluster.primary.endpoint
+  value = google_container_cluster.gke.endpoint
 }
 
 output "master_auth" {
-  value = google_container_cluster.primary.master_auth
+  value = google_container_cluster.gke.master_auth
 }
 
 output "cluster_ca_certificate" {
-  value = google_container_cluster.primary.master_auth[0].cluster_ca_certificate
+  value = google_container_cluster.gke.master_auth[0].cluster_ca_certificate
 }

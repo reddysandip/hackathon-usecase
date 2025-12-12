@@ -6,7 +6,7 @@
 
 output "vpc_name" {
 description = "Name of the VPC"
-value       = module.network.vpc_name
+value       = module.network.network_name
 }
 
 output "vpc_self_link" {
@@ -15,8 +15,8 @@ value       = module.network.vpc_self_link
 }
 
 output "private_subnet_ids" {
-description = "IDs of private subnets"
-value       = module.network.private_subnet_ids
+description = "Names of private subnets"
+value       = module.network.private_subnet_names
 }
 
 output "private_subnet_self_links" {
@@ -53,10 +53,10 @@ value       = module.gke.master_auth
 
 output "artifact_registry_repo_id" {
 description = "ID of the Artifact Registry repository"
-value       = module.artifact_registry.repo_id
+value       = module.artifact_registry.repository_id
 }
 
 output "artifact_registry_repo_url" {
 description = "Repository URL for pushing images"
-value       = module.artifact_registry.repo_url
+value       = module.artifact_registry.repository_url
 }
