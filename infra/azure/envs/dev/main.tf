@@ -1,5 +1,4 @@
 terraform {
-  required_version = ">= 1.6.0"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -80,3 +79,4 @@ module "aks" {
   acr_id                     = "/subscriptions/${var.subscription_id}/resourceGroups/${module.rg.name}/providers/Microsoft.ContainerRegistry/registries/${module.acr.name}"
   tags                       = local.tags
 }
+#
