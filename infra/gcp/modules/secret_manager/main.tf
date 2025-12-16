@@ -5,10 +5,9 @@
 ############################
 
 resource "google_secret_manager_secret" "secrets" {
-  for_each = var.secrets
-
+  for_each  = var.secrets
   project   = var.project_id
-  secret_id = each.value
+  secret_id = each.key
 
   replication {
     auto {}
@@ -18,6 +17,8 @@ resource "google_secret_manager_secret" "secrets" {
     prevent_destroy = true
   }
 }
+
+
 
 ############################
 # IAM ACCESS (STATIC KEYS)
