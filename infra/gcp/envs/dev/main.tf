@@ -23,7 +23,7 @@ module "network" {
   project_id              = var.project_id
   region                  = var.region
   environment             = var.environment
-  network_name            = "${var.environment}-vpc"
+  network_name = "${var.environment}-vpc"
   auto_create_subnetworks = false
 
   public_subnet_names        = var.public_subnet_names
@@ -107,6 +107,12 @@ module "gke" {
 # -------------------------------
 #output "network_info" {
 
+variable "network_name" {
+  type        = string
+  description = "Name of the VPC network"
+  default     = "vpc-network"
+}
+
 variable "secrets" {
   type    = map(any)
   default = {
@@ -131,6 +137,7 @@ resource "google_secret_manager_secret" "secrets" {
 
 
 #egfwjeagh#
+
 
 
 

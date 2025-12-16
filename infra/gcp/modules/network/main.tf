@@ -24,7 +24,12 @@ resource "google_compute_subnetwork" "private" {
   network                  = google_compute_network.vpc.id
   private_ip_google_access = true
   project                  = var.project_id
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
+
 
 resource "google_compute_firewall" "internal" {
   name    = "${var.network_name}-${var.environment}-allow-internal"
