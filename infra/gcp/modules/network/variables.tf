@@ -52,4 +52,11 @@ variable "allow_https" {
 }
 
 
+variable "nat_include_subnet_names" {
+  description = "Subset of private subnet base names (without -env) to include in NAT. If empty, include all private subnets."
+  type        = list(string)
+  default     = []
+}
+
+
 

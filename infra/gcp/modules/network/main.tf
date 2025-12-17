@@ -105,8 +105,11 @@ resource "google_compute_router_nat" "nat" {
   nat_ip_allocate_option             = "AUTO_ONLY"
   source_subnetwork_ip_ranges_to_nat = "LIST_OF_SUBNETWORKS"
 
+  # Include only the specified private subnets in NAT if provided; otherwise include all
   dynamic "subnetwork" {
-    for_each = google_compute_subnetwork.private
+    for_each = length(var.nat_include_subnet_names) > 0 ? [
+      for s in google_compute_subnetwork.private : s if contains(var.nat_include_subnet_names, replace(s.name, "-${var.environment}", ""))
+    ] : google_compute_subnetwork.private
     content {
       name                    = subnetwork.value.id
       source_ip_ranges_to_nat = ["ALL_IP_RANGES"]
