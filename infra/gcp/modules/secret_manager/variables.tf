@@ -4,11 +4,16 @@ variable "project_id" {
 }
 
 variable "secrets" {
-  description = "Secrets to manage"
-  type        = set(string)
+  description = "Secrets to manage as key -> secret_id"
+  type        = map(string)
 }
 
 variable "access_bindings" {
-  description = "IAM bindings for each secret. secret_name => [members]"
+  description = "IAM bindings for Secret Manager secrets"
   type        = map(list(string))
+  default     = {}
 }
+
+
+
+
