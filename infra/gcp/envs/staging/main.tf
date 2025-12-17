@@ -74,6 +74,15 @@ module "secret_manager" {
     "api-key",
     "db-connection"
   ]
+
+  access_bindings = {
+    "api-key" = [
+      "serviceAccount:${var.app_runner_sa}"
+    ]
+    "db-connection" = [
+      "serviceAccount:${var.app_runner_sa}"
+    ]
+  }
 }
 
 # -------------------------------
@@ -83,10 +92,10 @@ module "secret_manager" {
 # -------------------------------
 
 module "artifact_registry" {
-  source      = "../../modules/artifact_registry"
-  project_id  = var.project_id
-  environment = var.environment
-  repo_name   = var.repo_name
+  source          = "../../modules/artifact_registry"
+  project_id      = var.project_id
+  environment     = var.environment
+  repo_name       = var.repo_name
   artifact_region = var.region
 }
 # -------------------------------
@@ -98,9 +107,9 @@ module "gke" {
   cluster_name = var.cluster_name
   region       = var.region
 
-  network              = module.network.vpc_self_link
-  subnetwork           = module.network.private_subnet_self_links[0]
-  node_service_account = var.app_runner_sa
+  network                   = module.network.vpc_self_link
+  subnetwork                = module.network.private_subnet_self_links[0]
+  node_pool_service_account = var.node_service_account
 }
 
 # -------------------------------

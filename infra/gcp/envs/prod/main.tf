@@ -107,12 +107,12 @@ module "artifact_registry" {
 module "gke" {
   source = "../../modules/gke"
 
-  project_id           = var.project_id
-  region               = var.region
-  cluster_name         = var.cluster_name
-  network              = module.network.network_name
-  subnetwork           = module.network.private_subnet_names[0]
-  node_service_account = var.node_service_account
+  project_id                = var.project_id
+  region                    = var.region
+  cluster_name              = var.cluster_name
+  network                   = module.network.vpc_self_link
+  subnetwork                = module.network.private_subnet_self_links[0]
+  node_pool_service_account = var.node_service_account
 }
 
 # -------------------------------
