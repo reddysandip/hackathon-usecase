@@ -17,6 +17,6 @@ allow_https                = true
 
 # Service accounts
 # Used by applications to access secrets
-app_runner_sa        = "app-runner@massive-sandbox-477717-k3.iam.gserviceaccount.com"
+app_runner_sa = "app-runner@massive-sandbox-477717-k3.iam.gserviceaccount.com"
 # Used by GKE nodes; using the same SA for now
 node_service_account = "app-runner@massive-sandbox-477717-k3.iam.gserviceaccount.com"

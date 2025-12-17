@@ -29,10 +29,6 @@ variable "artifact_region" {
   default     = "us-central1"
 }
 
-variable "cidr_block" {
-  type = number
-}
-
 variable "public_subnet_names" {
   type    = list(string)
   default = []

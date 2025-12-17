@@ -76,7 +76,7 @@ variable "allow_https" {
   default     = true
 }
 
- 
+
 variable "enable_gke" {
   description = "Whether to provision GKE cluster and node pool"
   type        = bool
