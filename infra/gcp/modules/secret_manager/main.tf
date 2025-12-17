@@ -1,11 +1,5 @@
-data "google_secret_manager_secret" "existing" {
-  for_each = var.secrets
-  project  = var.project_id
-  secret_id = each.key
-}
-
 resource "google_secret_manager_secret" "secrets" {
-  for_each = { for k, v in var.secrets : k => v if lookup(data.google_secret_manager_secret.existing, k, null) == null }
+  for_each = var.secrets
   project   = var.project_id
   secret_id = each.key
 
@@ -30,7 +24,9 @@ locals {
 resource "google_secret_manager_secret_iam_member" "members" {
   for_each = local.iam_bindings
   project  = var.project_id
-  secret_id = each.value.secret
+  # Reference the created secret to establish dependency and correct ID
+  secret_id = google_secret_manager_secret.secrets[each.value.secret].id
   role      = "roles/secretmanager.secretAccessor"
   member    = each.value.member
+  depends_on = [google_secret_manager_secret.secrets]
 }

@@ -23,6 +23,12 @@ variable "repo_name" {
   type        = string
 }
 
+variable "artifact_region" {
+  description = "Region for Artifact Registry"
+  type        = string
+  default     = "us-central1"
+}
+
 variable "cidr_block" {
   type = number
 }
@@ -63,4 +69,9 @@ variable "allow_https" {
 variable "app_runner_sa" {
   description = "Service account used by applications"
   type        = string
+}
+
+variable "node_service_account" {
+  type        = string
+  description = "Service account for GKE nodes"
 }

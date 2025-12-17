@@ -51,12 +51,14 @@ value       = module.gke.master_auth
 
 # ------------------------------
 
-output "artifact_registry_repo_id" {
-description = "ID of the Artifact Registry repository"
-value       = module.artifact_registry.repository_id
+output "repository_id" {
+  value = module.artifact_registry.repository_id
 }
 
-output "artifact_registry_repo_url" {
-description = "Repository URL for pushing images"
-value       = module.artifact_registry.repository_url
+output "repository_location" {
+  value = module.artifact_registry.repository_location
+}
+
+output "repository_url" {
+  value = module.artifact_registry.repository_url
 }
