@@ -1,18 +1,17 @@
-project_id  = "massive-sandbox-477717-k3"
+# Project configuration
+project_id   = "massive-sandbox-477717-k3"
+environment  = "dev"
+cluster_name = "dev-cluster"
+repo_name    = "dev-docker"
+artifact_region = "us-central1"
+
+# Network configuration
+cidr_block                  = 10
+# Keep the existing subnet to avoid destroy, add the second subnet
+private_subnet_names        = ["dev-subnet", "dev-private-subnet-2"]
+private_subnet_cidr_blocks  = ["10.10.0.0/20", "10.0.2.0/24"]
+
+# Service account
 app_runner_sa = "app-runner@massive-sandbox-477717-k3.iam.gserviceaccount.com"
-environment = "dev"
-repo_name = "dev-docker"
-region = "asia-south1"
+node_service_account = "gke-nodes@massive-sandbox-477717-k3.iam.gserviceaccount.com"
 
-cluster_name = "dev-gke"
-network_name = "dev-vpc"
-
-cidr_block = 10
-
-private_subnet_names        = ["dev-subnet"]
-private_subnet_cidr_blocks = ["10.10.0.0/20"]
-
-
-firewall_ssh_source_ranges = ["0.0.0.0/0"]
-allow_http  = true
-allow_https = true

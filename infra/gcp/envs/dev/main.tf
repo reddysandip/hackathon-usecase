@@ -4,6 +4,10 @@ terraform {
       source  = "hashicorp/google"
       version = "~> 6.0"
     }
+    time = {
+      source  = "hashicorp/time"
+      version = "~> 0.11"
+    }
   }
 }
 
@@ -15,6 +19,44 @@ provider "google" {
 }
 
 # -------------------------------
+# Required APIs (ensure default SAs and services exist)
+# -------------------------------
+resource "google_project_service" "compute" {
+  project             = var.project_id
+  service             = "compute.googleapis.com"
+  disable_on_destroy  = false
+}
+
+resource "google_project_service" "container" {
+  project             = var.project_id
+  service             = "container.googleapis.com"
+  disable_on_destroy  = false
+}
+
+resource "google_project_service" "iamcredentials" {
+  project             = var.project_id
+  service             = "iamcredentials.googleapis.com"
+  disable_on_destroy  = false
+}
+
+resource "google_project_service" "iam" {
+  project             = var.project_id
+  service             = "iam.googleapis.com"
+  disable_on_destroy  = false
+}
+
+resource "google_project_service" "serviceusage" {
+  project             = var.project_id
+  service             = "serviceusage.googleapis.com"
+  disable_on_destroy  = false
+}
+
+resource "time_sleep" "wait_for_compute_sa" {
+  depends_on      = [google_project_service.compute, google_project_service.iam, google_project_service.container]
+  create_duration = "180s"
+}
+
+# -------------------------------
 # Network Module
 # -------------------------------
 module "network" {
@@ -23,7 +65,7 @@ module "network" {
   project_id              = var.project_id
   region                  = var.region
   environment             = var.environment
-  network_name = "${var.environment}-vpc"
+  network_name            = "vpc-dev"
   auto_create_subnetworks = false
 
   public_subnet_names        = var.public_subnet_names
@@ -35,6 +77,7 @@ module "network" {
   firewall_ssh_source_ranges = var.firewall_ssh_source_ranges
   allow_http                 = var.allow_http
   allow_https                = var.allow_https
+  nat_include_subnet_names   = ["dev-private-subnet-2"]
 }
 
 # -------------------------------
@@ -86,57 +129,31 @@ module "artifact_registry" {
   project_id  = var.project_id
   environment = var.environment
   repo_name   = var.repo_name
-  region      = var.region
+  artifact_region = var.artifact_region
 }
 
 # -------------------------------
 # GKE Cluster
 # -------------------------------
+
+
 module "gke" {
-  source       = "../../modules/gke"
+  source = "../../modules/gke"
+
   project_id   = var.project_id
-  cluster_name = var.cluster_name
   region       = var.region
-
-  network    = module.network.vpc_self_link
-  subnetwork = module.network.private_subnet_self_links[0]
+  cluster_name = var.cluster_name
+  network      = module.network.network_name
+  subnetwork   = module.network.private_subnet_names[0]
+  node_service_account = var.node_service_account
 }
 
-# -------------------------------       
-# Outputs
+
+
+
 # -------------------------------
-#output "network_info" {
-
-variable "network_name" {
-  type        = string
-  description = "Name of the VPC network"
-  default     = "vpc-network"
-}
-
-variable "secrets" {
-  type    = map(any)
-  default = {
-    "api-key"        = null
-    "db-connection"  = null
-  }
-}
-
-resource "google_secret_manager_secret" "secrets" {
-  for_each = var.secrets
-
-  secret_id = each.key
-
-  replication {
-    auto {}
-  }
-
-  lifecycle {
-    prevent_destroy = true
-  }
-}
-
-
-#egfwjeagh#
+# End of configuration
+# -------------------------------
 
 
 

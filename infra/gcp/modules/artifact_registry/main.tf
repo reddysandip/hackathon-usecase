@@ -1,13 +1,13 @@
 resource "google_artifact_registry_repository" "repo" {
-  provider      = google
-  location      = var.region          # e.g., "us-central1"
-  repository_id = var.repo_name       # e.g., "dev-docker"
-  format        = "DOCKER"
-  description   = "Artifact registry for ${var.repo_name}"
+  count        = 1
+  provider     = google
+  location     = var.artifact_region
+  repository_id = var.repo_name
+  format       = "DOCKER"
+  description  = "Artifact registry for ${var.repo_name}"
 
   lifecycle {
-    #prevent_destroy = true            # prevent accidental deletion
+    prevent_destroy = true
+    ignore_changes  = [description]
   }
 }
-
-

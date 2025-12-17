@@ -3,8 +3,8 @@ variable "project_id" {
   type        = string
 }
 
-variable "region" {
-  description = "Region where the repository will be created (e.g., asia-south1)"
+variable "artifact_region" {
+  description = "Region where the repository will be created (e.g., us-central1)"
   type        = string
 }
 
