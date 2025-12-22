@@ -35,23 +35,29 @@ resource "google_container_cluster" "gke" {
 
 resource "google_container_node_pool" "primary" {
   name     = "primary-pool"
-  cluster  = google_container_cluster.gke.name
-  location = google_container_cluster.gke.location
+  cluster = google_container_cluster.gke.name
+  location = var.region
   project  = var.project_id
 
-  node_count = 1
+  node_count = var.node_count
 
   node_config {
-    machine_type    = "e2-medium"
-    service_account = var.node_service_account
+    service_account = "compute@${var.project_id}.iam.gserviceaccount.com"
 
     oauth_scopes = [
       "https://www.googleapis.com/auth/cloud-platform"
     ]
-
-    boot_disk {
-      disk_type = "pd-standard"
-      size_gb   = 20
-    }
   }
+
+  timeouts {
+    create = "45m"
+    update = "45m"
+    delete = "45m"
+  }
+
+  depends_on = [
+    google_container_cluster.gke
+  ]
 }
+
+
