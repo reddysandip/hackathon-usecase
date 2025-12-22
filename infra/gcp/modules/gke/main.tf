@@ -15,7 +15,7 @@ resource "google_container_cluster" "gke" {
   node_config {
     service_account = "compute@${var.project_id}.iam.gserviceaccount.com"
     oauth_scopes = [
-      "https://www.googleapis.com/auth/cloud-platform",
+      "https://www.googleapis.com/auth/cloud-platform"
     ]
   }
 
@@ -31,11 +31,9 @@ resource "google_container_cluster" "gke" {
   }
 }
 
-
-
 resource "google_container_node_pool" "primary" {
   name     = "primary-pool"
-  cluster = google_container_cluster.gke.name
+  cluster  = google_container_cluster.gke.name
   location = var.region
   project  = var.project_id
 
@@ -61,3 +59,5 @@ resource "google_container_node_pool" "primary" {
 }
 
 
+
+ 
