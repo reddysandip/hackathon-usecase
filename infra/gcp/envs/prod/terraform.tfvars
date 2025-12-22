@@ -21,3 +21,9 @@ node_service_account = "gke-nodes-prod@massive-sandbox-477717-k3.iam.gserviceacc
 
 # Allow cluster destroy when tearing down prod
 deletion_protection = false
+
+artifact_region = "us-central1"
+
+secrets = {}
+
+access_bindings = {}
