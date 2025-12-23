@@ -31,7 +31,6 @@ jobs:
 
       # Authenticate only on push
       - name: Authenticate to GCP (WIF)
-        if: github.event_name == 'workflow_run'
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
