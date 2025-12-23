@@ -12,8 +12,8 @@ permissions:
   contents: read
 
 env:
-  # Prefer repo variable, fallback to secret if provided
   PROJECT_ID: ${{ vars.GCP_PROJECT_ID != '' && vars.GCP_PROJECT_ID || secrets.GCP_PROJECT_ID }}
+  TF_PLUGIN_CACHE_DIR: ~/.terraform.d/plugin-cache
 
 concurrency:
   group: terraform-dev
@@ -22,7 +22,7 @@ concurrency:
 jobs:
   terraform-apply-dev:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     defaults:
       run:
@@ -37,7 +37,13 @@ jobs:
         with:
           terraform_version: 1.6.6
 
-          
+      - name: Cache Terraform providers
+        uses: actions/cache@v4
+        with:
+          path: ~/.terraform.d/plugin-cache
+          key: terraform-${{ runner.os }}-${{ hashFiles('**/.terraform.lock.hcl') }}
+          restore-keys: |
+            terraform-${{ runner.os }}-
 
       - name: Authenticate to GCP (WIF)
         uses: google-github-actions/auth@v2
@@ -57,9 +63,32 @@ jobs:
       - name: Terraform Validate
         run: terraform validate
 
-      - name: Terraform Plan
-        run: terraform plan
+      # 🧩 Import existing secrets into state (idempotent)
+      - name: Terraform Import existing secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          secrets=("db-connection" "api-key" "another-secret")
+          for s in "${secrets[@]}"; do
+            addr="module.secret_manager.google_secret_manager_secret.secrets[\"$s\"]"
+            id="projects/${PROJECT_ID}/secrets/${s}"
+            if terraform state show "$addr" >/dev/null 2>&1; then
+              echo "State already has: $s"
+            else
+              echo "Importing secret into state: $s"
+              # Import may fail if resource concurrently created; don't fail the job
+              terraform import "$addr" "$id" || true
+            fi
+          done
 
+      # 🔑 Apply IAM first
+      - name: Terraform Apply IAM
+        run: terraform apply -auto-approve -target=module.iam
+
+      - name: Wait for IAM propagation
+        run: sleep 60
+
+      # 🚀 Apply everything else (GKE, secrets, etc.)
       - name: Terraform Apply
         run: terraform apply -auto-approve
 
