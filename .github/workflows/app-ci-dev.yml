@@ -12,15 +12,18 @@ permissions:
 
 concurrency:
   group: app-ci-dev
-  cancel-in-progress: true  # Cancel older runs if a new one is triggered
+  cancel-in-progress: true
 
 jobs:
   build-and-push-dev:
     name: Build & Push Images (dev)
     runs-on: ubuntu-latest
     environment: dev
-    if: github.event.workflow_run.head_sha == github.sha &&
-        github.event.workflow_run.conclusion == 'success'  # Only run for the latest commit and successful upstream workflow
+
+    # ✅ Correct workflow_run condition
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'dev'
 
     env:
       IMAGE_TAG: sha-${{ github.event.workflow_run.head_sha }}
@@ -32,25 +35,49 @@ jobs:
       DEV_SA: ${{ secrets.DEV_SA }}
 
     steps:
+      # --------------------------------------------------
+      # Checkout exact commit from upstream workflow
+      # --------------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
 
+      # --------------------------------------------------
+      # Setup Docker Buildx
+      # --------------------------------------------------
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
+      # --------------------------------------------------
+      # Debug GitHub context (IMPORTANT for WIF)
+      # --------------------------------------------------
+      - name: Debug GitHub context
+        run: |
+          echo "event_name=$GITHUB_EVENT_NAME"
+          echo "workflow=$GITHUB_WORKFLOW"
+          echo "ref=$GITHUB_REF"
+          echo "sha=$GITHUB_SHA"
+          echo "workflow_run.head_branch=${{ github.event.workflow_run.head_branch }}"
+          echo "workflow_run.head_sha=${{ github.event.workflow_run.head_sha }}"
+
+      # --------------------------------------------------
+      # Validate WIF secrets
+      # --------------------------------------------------
       - name: Validate WIF secrets
         run: |
-          if [ -z "${{ env.WIF_PROVIDER_DEV }}" ]; then
+          if [ -z "$WIF_PROVIDER_DEV" ]; then
             echo "❌ WIF_PROVIDER_DEV secret is missing"
             exit 1
           fi
-          if [ -z "${{ env.DEV_SA }}" ]; then
+          if [ -z "$DEV_SA" ]; then
             echo "❌ DEV_SA secret is missing"
             exit 1
           fi
 
+      # --------------------------------------------------
+      # Authenticate to GCP using Workload Identity Federation
+      # --------------------------------------------------
       - name: Authenticate to GCP (WIF)
         uses: google-github-actions/auth@v2
         with:
@@ -59,15 +86,19 @@ jobs:
           project_id: ${{ env.PROJECT_ID }}
           create_credentials_file: true
           export_environment_variables: true
-          universe: googleapis.com
           cleanup_credentials: true
           access_token_lifetime: 3600s
           access_token_scopes: https://www.googleapis.com/auth/cloud-platform
-          id_token_include_email: false
 
+      # --------------------------------------------------
+      # Setup gcloud CLI
+      # --------------------------------------------------
       - name: Setup gcloud
         uses: google-github-actions/setup-gcloud@v2
 
+      # --------------------------------------------------
+      # Check if DEV GKE cluster exists
+      # --------------------------------------------------
       - name: Check if DEV GKE cluster exists
         id: check_cluster
         run: |
@@ -85,12 +116,21 @@ jobs:
           echo "⚠️ Dev cluster does not exist. Skipping CI."
           exit 0
 
+      # --------------------------------------------------
+      # Docker authentication
+      # --------------------------------------------------
       - name: Configure Docker Auth
         run: gcloud auth configure-docker $REGISTRY --quiet
 
+      # --------------------------------------------------
+      # Run unit tests
+      # --------------------------------------------------
       - name: Run unit tests
         run: echo "✅ Running unit tests (dev)"
 
+      # --------------------------------------------------
+      # Build & Push Docker Images
+      # --------------------------------------------------
       - name: Build & Push Images
         run: |
           SERVICES=(application-service patient-service order-service)
