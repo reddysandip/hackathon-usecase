@@ -133,19 +133,16 @@ jobs:
         # --------------------------------------------------
         - name: Build & Push Images
           run: |
-            # Remove any leading/trailing slashes from REGISTRY
-            REGISTRY="${REGISTRY#/}"
-            REGISTRY="${REGISTRY%/}"
-            echo "REGISTRY=$REGISTRY"
-            echo "IMAGE_TAG=$IMAGE_TAG"
-  
-            SERVICES=(application-service patient-service order-service)
-  
-            for S in "${SERVICES[@]}"; do
-              docker buildx build \
-                --platform linux/amd64 \
-                --push \
-                -t ${DEV_REGISTRY}/${S}:${IMAGE_TAG} \
-                ./services/$S
-            done
+           echo "IMAGE_TAG=${IMAGE_TAG}"
 
+           SERVICES=(application-service patient-service order-service)
+
+           for S in "${SERVICES[@]}"; do
+             docker buildx build \
+            --platform linux/amd64 \
+            --push \
+            -t ${DEV_REGISTRY}/${S}:${IMAGE_TAG} \
+             ./services/${S}
+           done
+
+           echo "✅ Successfully built and pushed images"
