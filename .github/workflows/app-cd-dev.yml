@@ -23,7 +23,11 @@ jobs:
     name: Deploy to GKE (dev)
     runs-on: ubuntu-latest
     environment: dev
-    if: github.event.workflow_run.conclusion == 'success'
+
+    # ✅ HARD gate – only successful CI on dev branch
+    if: |
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'dev'
 
     env:
       WIF_PROVIDER_DEV: ${{ secrets.WIF_PROVIDER_DEV }}
@@ -33,15 +37,28 @@ jobs:
 
     steps:
       # --------------------------------------------------
-      # Checkout repository
+      # Debug workflow_run context (CRITICAL)
+      # --------------------------------------------------
+      - name: Debug workflow_run context
+        run: |
+          echo "workflow=${{ github.event.workflow_run.name }}"
+          echo "conclusion=${{ github.event.workflow_run.conclusion }}"
+          echo "head_branch=${{ github.event.workflow_run.head_branch }}"
+          echo "head_sha=${{ github.event.workflow_run.head_sha }}"
+          echo "run_id=${{ github.event.workflow_run.id }}"
+
+      # --------------------------------------------------
+      # Checkout exact same commit CI used
       # --------------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       # --------------------------------------------------
       # Download image metadata from CI
       # --------------------------------------------------
-      - name: Download image metadata
+      - name: Download images-dev artifact
         uses: actions/download-artifact@v4
         with:
           name: images-dev
@@ -74,42 +91,19 @@ jobs:
         uses: azure/setup-helm@v3
 
       # --------------------------------------------------
-      # Prepare dynamic image tags
+      # Parse image tags
       # --------------------------------------------------
       - name: Prepare image tags
         id: imgs
         run: |
           IMAGES_JSON=images/images.json
 
-          APP_IMG=$(jq -r '.application' "$IMAGES_JSON")
-          PAT_IMG=$(jq -r '.patient' "$IMAGES_JSON")
-          ORD_IMG=$(jq -r '.order' "$IMAGES_JSON")
+          jq . "$IMAGES_JSON"
 
-          echo "app_repo=${APP_IMG%:*}" >> $GITHUB_OUTPUT
-          echo "app_tag=${APP_IMG##*:}" >> $GITHUB_OUTPUT
-          echo "patient_repo=${PAT_IMG%:*}" >> $GITHUB_OUTPUT
-          echo "patient_tag=${PAT_IMG##*:}" >> $GITHUB_OUTPUT
-          echo "order_repo=${ORD_IMG%:*}" >> $GITHUB_OUTPUT
-          echo "order_tag=${ORD_IMG##*:}" >> $GITHUB_OUTPUT
+          echo "app_repo=$(jq -r '.application | split(\":\")[0]' $IMAGES_JSON)" >> $GITHUB_OUTPUT
+          echo "app_tag=$(jq -r '.application | split(\":\")[1]' $IMAGES_JSON)" >> $GITHUB_OUTPUT
 
-      # --------------------------------------------------
-      # Deploy using Helm with dynamic image tags
-      # --------------------------------------------------
-      - name: Helm upgrade (dev)
-        working-directory: helm/umbrella
-        run: |
-          helm upgrade --install hackathon-umbrella . \
-            --namespace dev \
-            --create-namespace \
-            --wait \
-            --timeout 10m \
-            --set application-service.image.repository=${{ steps.imgs.outputs.app_repo }} \
-            --set application-service.image.tag=${{ steps.imgs.outputs.app_tag }} \
-            --set patient-service.image.repository=${{ steps.imgs.outputs.patient_repo }} \
-            --set patient-service.image.tag=${{ steps.imgs.outputs.patient_tag }} \
-            --set order-service.image.repository=${{ steps.imgs.outputs.order_repo }} \
-            --set order-service.image.tag=${{ steps.imgs.outputs.order_tag }}
-        env:
-          PROJECT_ID: ${{ env.PROJECT_ID }}
-          DEV_GKE_CLUSTER: ${{ env.DEV_GKE_CLUSTER }}
-          DEV_GKE_ZONE: ${{ env.DEV_GKE_ZONE }}
+          echo "patient_repo=$(jq -r '.patient | split(\":\")[0]' $IMAGES_JSON)" >> $GITHUB_OUTPUT
+          echo "patient_tag=$(jq -r '.patient | split(\":\")[1]' $IMAGES_JSON)" >> $GITHUB_OUTPUT
+
+          echo "order_repo=$(_
