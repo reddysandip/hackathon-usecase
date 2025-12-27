@@ -1,0 +1,10 @@
+{
+  "name": "application-service",
+  "version": "1.0.0",
+  "description": "Hackathon application service",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {}
+}
