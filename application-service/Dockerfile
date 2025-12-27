@@ -12,7 +12,7 @@ RUN npm install --only=production
 COPY . .
 
 # Expose the port your app uses
-EXPOSE 3000
+EXPOSE 3001
 
 # Start the app
 CMD ["node", "src/index.js"]
