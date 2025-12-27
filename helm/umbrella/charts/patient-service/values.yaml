@@ -1,13 +1,13 @@
 image:
   repository: us-central1-docker.pkg.dev/massive-sandbox-477717-k3/dev-docker/patient-service
-  tag: sha-node-fix
+  tag: v2.0.1
 
 imagePullPolicy: IfNotPresent
 
 replicaCount: 1
 
 service:
-  port: 3001
+  port: 3003
 
 resources: {}
 
