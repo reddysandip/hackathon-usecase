@@ -9,7 +9,7 @@ global:
 application-service:
   image:
     repository: us-central1-docker.pkg.dev/massive-sandbox-477717-k3/dev-docker/application-service
-    tag:  sha-node-fix
+    tag:  v2.0.1
     imagePullPolicy: IfNotPresent
   service:
     port: 3001
@@ -20,7 +20,7 @@ application-service:
 order-service:
   image:
     repository: us-central1-docker.pkg.dev/massive-sandbox-477717-k3/dev-docker/order-service
-    tag: sha-node-fix
+    tag: v2.0.1
     imagePullPolicy: IfNotPresent
   service:
     port: 3002
@@ -31,7 +31,7 @@ order-service:
 patient-service:
   image:
     repository: us-central1-docker.pkg.dev/massive-sandbox-477717-k3/dev-docker/patient-service
-    tag: sha-node-fix
+    tag: v2.0.1
     imagePullPolicy: IfNotPresent
   service:
     port: 3003

@@ -1,14 +1,14 @@
 
 image:
   repository: us-central1-docker.pkg.dev/massive-sandbox-477717-k3/dev-docker/order-service
-  tag: sha-7ff788cd3de52002eb5da310773a985fec086c48
+  tag: v2.0.1
 
 imagePullPolicy: IfNotPresent
 
 replicaCount: 1
 
 service:
-  port: 8080
+  port: 3002
 
 resources: {}
 
