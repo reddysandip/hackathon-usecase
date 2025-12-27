@@ -1,159 +1,68 @@
 name: App CI - Dev - Build & Push Images
 
 on:
-  push:
-    branches: [dev]
+  workflow_call:
 
 permissions:
   id-token: write
   contents: read
 
-concurrency:
-  group: app-ci-dev
-  cancel-in-progress: true
-
 jobs:
-  build-and-push-dev:
-    name: Build & Push Images (dev)
+  build-and-push:
     runs-on: ubuntu-latest
     environment: dev
 
-    # Run only when Terraform succeeded AND branch is dev
-    if: >
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.head_branch == 'dev'
-
     env:
-      IMAGE_TAG: sha-${{ github.event.workflow_run.head_sha }}
+      IMAGE_TAG: sha-${{ github.sha }}
       PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
       REGISTRY: ${{ vars.DEV_REGISTRY }}
-      CLUSTER_NAME: dev-cluster
-      CLUSTER_ZONE: us-central1-a
       WIF_PROVIDER_DEV: ${{ secrets.WIF_PROVIDER_DEV }}
       DEV_SA: ${{ secrets.DEV_SA }}
 
     steps:
-      # --------------------------------------------------
-      # Checkout exact commit from upstream workflow
-      # --------------------------------------------------
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.workflow_run.head_sha }}
 
-      # --------------------------------------------------
-      # Setup Docker Buildx
-      # --------------------------------------------------
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
-      # --------------------------------------------------
-      # Debug GitHub context
-      # --------------------------------------------------
-      - name: Debug GitHub context
-        run: |
-          echo "workflow_run.head_branch=${{ github.event.workflow_run.head_branch }}"
-          echo "workflow_run.head_sha=${{ github.event.workflow_run.head_sha }}"
-          echo "IMAGE_TAG=$IMAGE_TAG"
-
-      # --------------------------------------------------
-      # Validate WIF secrets
-      # --------------------------------------------------
-      - name: Validate WIF secrets
-        run: |
-          if [ -z "$WIF_PROVIDER_DEV" ]; then
-            echo "❌ WIF_PROVIDER_DEV secret is missing"
-            exit 1
-          fi
-          if [ -z "$DEV_SA" ]; then
-            echo "❌ DEV_SA secret is missing"
-            exit 1
-          fi
-
-      # --------------------------------------------------
-      # Authenticate to GCP (WIF)
-      # --------------------------------------------------
-      - name: Authenticate to GCP (WIF)
+      - name: Authenticate to GCP
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ env.WIF_PROVIDER_DEV }}
           service_account: ${{ env.DEV_SA }}
           project_id: ${{ env.PROJECT_ID }}
-          create_credentials_file: true
-          export_environment_variables: true
 
-      # --------------------------------------------------
-      # Setup gcloud
-      # --------------------------------------------------
-      - name: Setup gcloud
-        uses: google-github-actions/setup-gcloud@v2
-
-      # --------------------------------------------------
-      # Check if DEV GKE cluster exists
-      # --------------------------------------------------
-      - name: Check if DEV GKE cluster exists
-        id: check_cluster
-        run: |
-          if gcloud container clusters describe "$CLUSTER_NAME" \
-            --zone "$CLUSTER_ZONE" \
-            --project "$PROJECT_ID" >/dev/null 2>&1; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Stop CI if cluster does not exist
-        if: steps.check_cluster.outputs.exists == 'false'
-        run: |
-          echo "⚠️ Dev cluster does not exist. Skipping CI."
-          exit 0
-
-      # --------------------------------------------------
-      # Docker authentication
-      # --------------------------------------------------
-      - name: Configure Docker Auth
+      - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 
-      # --------------------------------------------------
-      # Build & Push Docker Images
-      # --------------------------------------------------
-      - name: Build & Push Images
+      - name: Build & Push Multi-Arch Images
         run: |
-         
           SERVICES=(application-service patient-service order-service)
-
-              for S in "${SERVICES[@]}"; do
-               if [ -f "./$S/Dockerfile" ]; then
-               docker buildx build \
-               --platform linux/amd64 \
-               --push \
-              -t "$REGISTRY/$S:$IMAGE_TAG" \
-             -t "$REGISTRY/$S:latest" \
-            "./$S"
+          for S in "${SERVICES[@]}"; do
+            if [ -f "./$S/Dockerfile" ]; then
+              echo "Building and pushing $S..."
+              docker buildx build \
+                --platform linux/amd64,linux/arm64 \
+                --push \
+                -t "$REGISTRY/$S:$IMAGE_TAG" \
+                -t "$REGISTRY/$S:latest" \
+                "./$S"
             fi
-            done
+          done
 
-
-      # --------------------------------------------------
-      # Generate image metadata for CD
-      # --------------------------------------------------
-      - name: Generate images-dev artifact
+      - name: Generate images artifact
         run: |
           mkdir -p images
           cat <<EOF > images/images.json
-          {
-            "application-service": "${REGISTRY}/application-service:${IMAGE_TAG}",
-            "patient-service": "${REGISTRY}/patient-service:${IMAGE_TAG}",
-            "order-service": "${REGISTRY}/order-service:${IMAGE_TAG}"
-          }
-          EOF
-          echo "📦 images.json created:"
-          cat images/images.json
+             {
+          "application-service": "$REGISTRY/application-service:$IMAGE_TAG",
+          "patient-service": "$REGISTRY/patient-service:$IMAGE_TAG",
+          "order-service": "$REGISTRY/order-service:$IMAGE_TAG"
+                 }
+              EOF
 
-      # --------------------------------------------------
-      # Upload artifact for CD
-      # --------------------------------------------------
-      - name: Upload images-dev artifact
+      - name: Upload images artifact
         uses: actions/upload-artifact@v4
         with:
           name: images-dev
