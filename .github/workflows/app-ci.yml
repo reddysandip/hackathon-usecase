@@ -119,22 +119,20 @@ jobs:
       # --------------------------------------------------
       - name: Build & Push Images
         run: |
-          REGISTRY="${REGISTRY%/}"
+         
           SERVICES=(application-service patient-service order-service)
 
-          for S in "${SERVICES[@]}"; do
-            if [ ! -f "./$S/Dockerfile" ]; then
-              echo "⚠️ Skipping $S (Dockerfile not found)"
-              continue
-            fi
-
-            echo "🚀 Building $S"
-            docker buildx build \
-              --platform linux/amd64 \
-              --push \
+              for S in "${SERVICES[@]}"; do
+               if [ -f "./$S/Dockerfile" ]; then
+               docker buildx build \
+               --platform linux/amd64 \
+               --push \
               -t "$REGISTRY/$S:$IMAGE_TAG" \
-              "./$S"
-          done
+             -t "$REGISTRY/$S:latest" \
+            "./$S"
+            fi
+            done
+
 
       # --------------------------------------------------
       # Generate image metadata for CD
