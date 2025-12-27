@@ -1,13 +1,13 @@
 image:
   repository: us-central1-docker.pkg.dev/massive-sandbox-477717-k3/dev-docker/application-service
-  tag: sha-7ff788cd3de52002eb5da310773a985fec086c48
+  tag: sha-node-fix
 
 imagePullPolicy: IfNotPresent
 
 replicaCount: 1
 
 service:
-  port: 3001
+  port: 3000
 
 resources: {}
 env: []

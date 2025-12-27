@@ -1,23 +1,18 @@
-# Use official Python image as base
-FROM python:3.11-slim
+# Use official Node.js LTS Alpine image
+FROM node:20-alpine
 
 # Set working directory
 WORKDIR /app
 
-# Copy requirements file
-COPY requirements.txt .
+# Copy package files and install dependencies
+COPY package*.json ./
+RUN npm install --only=production
 
-# Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy application code
+# Copy source code
 COPY . .
 
-# Expose the port the app runs on
-EXPOSE 8082
+# Expose the port your app uses
+EXPOSE 3001
 
-# Set environment variables (optional)
-ENV PYTHONUNBUFFERED=1
-
-# Command to run the application
-CMD ["python", "main.py"]
+# Start the app
+CMD ["node", "src/index.js"]
