@@ -6,5 +6,7 @@
   "scripts": {
     "start": "node src/index.js"
   },
-  "dependencies": {}
+   "dependencies": {
+    "express": "^4.19.2"
+  }
 }
