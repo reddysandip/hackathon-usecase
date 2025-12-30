@@ -1,15 +1,14 @@
 # umbrella/values.yaml
+
 global:
   serviceAccount:
+    enabled: true
     name: artifact-puller-sa
-
-  image:
-    tag: ""   # <-- CD will override this with sha-${{ github.sha }}
 
 application-service:
   image:
     repository: us-central1-docker.pkg.dev/massive-sandbox-477717-k3/dev-docker/application-service
-    tag: ""                # local fallback (optional)
+    tag: "__REQUIRED__"   # must be overridden by CD
     imagePullPolicy: IfNotPresent
   replicaCount: 1
   service:
@@ -20,7 +19,7 @@ application-service:
 order-service:
   image:
     repository: us-central1-docker.pkg.dev/massive-sandbox-477717-k3/dev-docker/order-service
-    tag: ""
+    tag: "__REQUIRED__"
     imagePullPolicy: IfNotPresent
   replicaCount: 1
   service:
@@ -31,7 +30,7 @@ order-service:
 patient-service:
   image:
     repository: us-central1-docker.pkg.dev/massive-sandbox-477717-k3/dev-docker/patient-service
-    tag: ""
+    tag: "__REQUIRED__"
     imagePullPolicy: IfNotPresent
   replicaCount: 1
   service:

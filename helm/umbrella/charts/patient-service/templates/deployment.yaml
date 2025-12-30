@@ -14,17 +14,19 @@ spec:
       labels:
         app: {{ include "patient-service.name" . }}
     spec:
-      serviceAccountName: {{ .Values.global.serviceAccount.name }}
+      {{- if .Values.global.serviceAccount.enabled }}
+      serviceAccountName: {{ .Values.global.serviceAccount.name | quote }}
+      {{- end }}
       containers:
         - name: {{ include "patient-service.name" . }}
-          image: "{{ .Values.image.repository }}:{{ default .Values.global.image.tag .Values.image.tag }}"
+          image: "{{ required "ERROR: image.repository is required for patient-service" .Values.image.repository }}:{{ required "ERROR: image.tag is required for patient-service" .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.imagePullPolicy }}
           ports:
             - containerPort: {{ .Values.service.port }}
           env:
-          {{- range .Values.env }}
+            {{- range .Values.env }}
             - name: {{ .name }}
               value: {{ .value | quote }}
-          {{- end }}
+            {{- end }}
           resources:
 {{- toYaml .Values.resources | nindent 12 }}

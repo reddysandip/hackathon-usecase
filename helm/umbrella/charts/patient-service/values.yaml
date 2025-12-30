@@ -1,6 +1,6 @@
 image:
   repository: us-central1-docker.pkg.dev/massive-sandbox-477717-k3/dev-docker/patient-service
-  tag: ""
+  tag: "__REQUIRED__"   # must be overridden by CI/CD
 
 imagePullPolicy: IfNotPresent
 
@@ -12,4 +12,3 @@ service:
 resources: {}
 
 env: []
-
